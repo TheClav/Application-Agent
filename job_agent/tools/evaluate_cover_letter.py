@@ -8,23 +8,16 @@ import os
 import anthropic
 
 SYSTEM_PROMPT = """\
-You are a strict cover letter evaluator. Evaluate with fresh eyes — no attachment to what was written.
+You are a cover letter fabrication checker. Your only job is to detect invented facts.
 
-Rubric criteria (all must pass):
-1. Hook is specific — not a generic opener like "I am excited to apply". Names the role and shows \
-genuine understanding of the company/team.
-2. Resume is not repeated — no bullet points or phrases from the resume appear verbatim.
-3. Fit paragraph names an actual role challenge from the JD and references concrete experience.
-4. Gap is handled if gap_brief is non-trivial (honestly and briefly).
-5. Interest paragraph is non-generic — references something specific about the company or domain.
-6. Under 350 words — count the words carefully.
-8. No em dashes (—) anywhere in the text.
-7. No fabrication — only references experience/skills that exist. This includes duration claims: \
-any phrase implying a specific length of experience (e.g. "2 years at X", "over the past year", \
-"years of experience with Y") must be exactly derivable from the resume dates. Invented or \
-aggregated tenure is fabrication.
+Check for fabrication:
+- A skill, technology, or company is referenced that does not appear in the experience bank.
+- A specific duration is stated (e.g. "2 years at X", "over the past year") that is not exactly \
+derivable from the resume dates.
+- A quantified outcome is claimed that does not appear in the experience bank.
 
-Fabrication is a hard stop. Set fabrication_detected=true if detected.
+Do NOT flag: rephrasing, paraphrasing, tone, structure, word choice, or style.
+When in doubt: do NOT flag. Only flag clear, unambiguous invention.
 
 Always return valid JSON matching the exact schema.
 """
@@ -57,7 +50,7 @@ EVAL_SCHEMA = {
 
 def run(input_data: dict) -> dict:
     client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
-    model = os.environ.get("JUDGE_MODEL", os.environ.get("GENERATION_MODEL", "claude-sonnet-4-6"))
+    model = os.environ.get("CL_JUDGE_MODEL", os.environ.get("JUDGE_MODEL", "claude-haiku-4-5-20251001"))
 
     cover_letter = input_data["cover_letter"]
     ctx = input_data["writing_context"]
@@ -74,7 +67,7 @@ def run(input_data: dict) -> dict:
 Evaluate this cover letter draft.
 
 Note: the actual word count (counted programmatically) is {actual_word_count} words.
-Only fail criterion 6 if this number exceeds 350.
+Only flag word count if this number exceeds 350.
 
 For fabrication checks, use the experience bank below as your source of truth.
 Only flag fabrication if a claim has NO basis in any experience entry.

@@ -46,7 +46,7 @@ CL_SCHEMA = {
 
 def run(input_data: dict) -> dict:
     client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
-    model = os.environ.get("GENERATION_MODEL", "claude-sonnet-4-20250514")
+    model = os.environ.get("CL_MODEL", os.environ.get("GENERATION_MODEL", "claude-sonnet-4-20250514"))
 
     ctx = input_data["writing_context"]
     resume = input_data["resume"]

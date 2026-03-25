@@ -385,14 +385,10 @@ def _run_pipeline(
     if output_mode == "resume":
         log.info("\n[9/10] Skipping cover letter (resume only)")
     else:
-        log.info(f"\n[9/10] Cover letter loop (max {MAX_REVISION_LOOPS} iterations)...")
-        prev_cl_failures = None
+        log.info("\n[9/10] Generating cover letter...")
 
-        for i in range(MAX_REVISION_LOOPS):
+        for i in range(2):
             cl_iterations = i + 1
-            log.info(f"\n      ── Cover letter iteration {i+1}/{MAX_REVISION_LOOPS} ──")
-
-            log.info(f"      Generating cover letter...")
             cl_result = generate_cover_letter.run({
                 "writing_context": writing_context,
                 "resume": best_resume,
@@ -400,51 +396,29 @@ def _run_pipeline(
             cl_text = cl_result.get("cover_letter", "")
             word_count = cl_result.get("word_count", len(cl_text.split()))
             log.info(f"      Word count: {word_count}  |  confidence: {cl_result.get('confidence')}")
-            log.debug(f"Cover letter draft:\n{cl_text}")
 
-            log.info(f"      Evaluating cover letter...")
             cl_ev = evaluate_cover_letter.run({
                 "cover_letter": cl_text,
                 "writing_context": writing_context,
             })
-            log.info(f"      Passed: {cl_ev.get('passed')}  |  fabrication: {cl_ev.get('fabrication_detected')}")
+            log.info(f"      Fabrication check: {cl_ev.get('fabrication_detected', False)}")
 
-            if cl_ev.get("failures"):
-                log.info(f"      Failures:")
-                for f in cl_ev["failures"]:
-                    log.info(f"        • {f}")
-
-            log.debug(f"Full CL eval:\n{json.dumps(cl_ev, indent=2)}")
-
-            if cl_ev.get("fabrication_detected"):
-                log.info("      !! Fabrication detected in cover letter — injecting correction and retrying")
+            if cl_ev.get("fabrication_detected") and i == 0:
+                log.info("      !! Fabrication detected — retrying once with correction")
                 writing_context["cl_revision_instructions"] = [
-                    "CRITICAL: Fabrication was detected. Only reference skills, experiences, and durations "
-                    "that exist verbatim in the experience bank. Do not invent tenure claims or add skills "
-                    "not present in the experience entries."
-                ] + cl_ev.get("revision_instructions", [])
-                prev_cl_failures = cl_ev.get("failures", [])
+                    "CRITICAL: Fabrication was detected. Only reference skills, experiences, and "
+                    "durations that exist in the experience bank. Do not invent tenure claims or add "
+                    "skills not present in the experience entries."
+                ]
+                any_fabrication = True
                 continue
 
-            # Track best: prefer passed, then fewest failures, then most recent
-            current_failures = len(cl_ev.get("failures", []))
-            prev_failure_count = len(prev_cl_failures) if prev_cl_failures is not None else 999
+            best_cl_text = cl_text
+            best_cl_word_count = word_count
+            best_cl_passed = not cl_ev.get("fabrication_detected", False)
+            break
 
-            if cl_ev.get("passed") or current_failures < prev_failure_count:
-                best_cl_text = cl_text
-                best_cl_word_count = word_count
-                best_cl_passed = cl_ev.get("passed", False)
-                log.info(f"      ✓ New best cover letter (failures: {current_failures})")
-
-            # Early exit: same failures repeated (no progress)
-            if prev_cl_failures is not None and cl_ev.get("failures") == prev_cl_failures:
-                log.info(f"      Same failures repeated — stopping loop (no progress)")
-                break
-
-            prev_cl_failures = cl_ev.get("failures", [])
-            writing_context["cl_revision_instructions"] = cl_ev.get("revision_instructions", [])
-
-        log.info(f"\n      Cover letter loop complete. Passed: {best_cl_passed}")
+        log.info(f"      Cover letter complete.")
 
     # ── Step 8: Render PDFs ───────────────────────────────────────────────────
     log.info("\n[10/10] Rendering PDFs...")
