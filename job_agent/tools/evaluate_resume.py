@@ -40,6 +40,24 @@ Fabrication definition (be precise — do NOT over-flag):
 Always return valid JSON matching the exact schema.
 """
 
+def _parse_json(text: str) -> dict:
+    text = text.strip()
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        pass
+    if text.startswith("```"):
+        text = text.split("```")[1]
+        if text.startswith("json"):
+            text = text[4:]
+        text = text.strip()
+    start = text.find("{")
+    if start != -1:
+        obj, _ = json.JSONDecoder().raw_decode(text, start)
+        return obj
+    raise json.JSONDecodeError("no JSON object found", text, 0)
+
+
 EVAL_SCHEMA = {
     "passed": "boolean",
     "fabrication_detected": "boolean",
@@ -108,29 +126,20 @@ Return ONLY valid JSON. No markdown fences, no explanation.
 
     raw = response.content[0].text.strip()
     try:
-        result = json.loads(raw)
+        result = _parse_json(raw)
     except json.JSONDecodeError:
-        cleaned = raw
-        if cleaned.startswith("```"):
-            cleaned = cleaned.split("```")[1]
-            if cleaned.startswith("json"):
-                cleaned = cleaned[4:]
-            cleaned = cleaned.strip()
-        try:
-            result = json.loads(cleaned)
-        except json.JSONDecodeError:
-            retry_response = client.messages.create(
-                model=model,
-                max_tokens=2000,
-                system=SYSTEM_PROMPT,
-                messages=[{
-                    "role": "user",
-                    "content": user_message + "\n\nIMPORTANT: Return ONLY the raw JSON object. No markdown, no explanation, no preamble.",
-                }],
-            )
-            retry_raw = retry_response.content[0].text.strip()
-            if not retry_raw:
-                raise ValueError("evaluate_resume: model returned empty response on retry")
-            result = json.loads(retry_raw)
+        retry_response = client.messages.create(
+            model=model,
+            max_tokens=2000,
+            system=SYSTEM_PROMPT,
+            messages=[{
+                "role": "user",
+                "content": user_message + "\n\nIMPORTANT: Return ONLY the raw JSON object. No markdown, no explanation, no preamble.",
+            }],
+        )
+        retry_raw = retry_response.content[0].text.strip()
+        if not retry_raw:
+            raise ValueError("evaluate_resume: model returned empty response on retry")
+        result = _parse_json(retry_raw)
 
     return result

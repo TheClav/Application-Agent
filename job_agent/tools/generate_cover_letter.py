@@ -62,7 +62,7 @@ Write a cover letter for this candidate.
 </job_brief>
 
 <candidate_meta>
-{json.dumps(ctx.get("candidate_meta", {}), indent=2)}
+{json.dumps(ctx.get("candidate_meta", {}), indent=2, default=str)}
 </candidate_meta>
 
 <soft_signals>

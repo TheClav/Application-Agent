@@ -6,6 +6,7 @@ Returns passed=True only if no dealbreakers are triggered.
 
 import json
 import os
+import time
 import anthropic
 from dotenv import load_dotenv
 
@@ -80,13 +81,21 @@ Return a JSON object with exactly this schema:
 Return ONLY valid JSON. No markdown fences, no explanation.
 """
 
-    response = client.messages.create(
-        model=model,
-        max_tokens=1500,
-        temperature=0,
-        system=SYSTEM_PROMPT,
-        messages=[{"role": "user", "content": user_message}],
-    )
+    for attempt in range(4):
+        try:
+            response = client.messages.create(
+                model=model,
+                max_tokens=1500,
+                temperature=0,
+                system=SYSTEM_PROMPT,
+                messages=[{"role": "user", "content": user_message}],
+            )
+            break
+        except anthropic.APIStatusError as e:
+            if e.status_code in (500, 529) and attempt < 3:
+                time.sleep(5 * (attempt + 1))
+            else:
+                raise
 
     raw = response.content[0].text.strip()
     try:
