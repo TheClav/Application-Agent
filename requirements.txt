@@ -1,0 +1,7 @@
+anthropic
+psycopg2-binary
+pgvector
+python-dotenv
+jinja2
+weasyprint
+voyageai

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 10.5pt;
+      color: #1a1a1a;
+      line-height: 1.6;
+      padding: 48px 52px;
+      max-width: 680px;
+    }
+    .header {
+      margin-bottom: 32px;
+    }
+    .header h1 {
+      font-size: 14pt;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .header .meta {
+      font-size: 9.5pt;
+      color: #555;
+    }
+    .salutation {
+      margin-bottom: 16px;
+      font-size: 10.5pt;
+    }
+    .body p {
+      margin-bottom: 14px;
+    }
+    .closing {
+      margin-top: 28px;
+    }
+    .closing .sign-off {
+      margin-bottom: 20px;
+    }
+    .closing .name {
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>{{ meta.name }}</h1>
+    <div class="meta">{{ meta.location }} &nbsp;·&nbsp; {{ meta.target_title }}</div>
+  </div>
+
+  <div class="salutation">
+    Dear Hiring Manager{% if jd_brief.company %} at {{ jd_brief.company }}{% endif %},
+  </div>
+
+  <div class="body">
+    {% for paragraph in cover_letter.split('\n\n') %}
+    {% if paragraph.strip() %}
+    <p>{{ paragraph.strip() }}</p>
+    {% endif %}
+    {% endfor %}
+  </div>
+
+  <div class="closing">
+    <div class="sign-off">Sincerely,</div>
+    <div class="name">{{ meta.name }}</div>
+  </div>
+
+</body>
+</html>

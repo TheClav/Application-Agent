@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 10pt;
+      color: #1a1a1a;
+      line-height: 1.45;
+      padding: 28px 36px;
+    }
+    h1 {
+      font-size: 20pt;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 2px;
+    }
+    .contact-line {
+      font-size: 9pt;
+      color: #555;
+      margin-bottom: 14px;
+    }
+    .section-title {
+      font-size: 8.5pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: #333;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 2px;
+      margin: 14px 0 8px;
+    }
+    .summary {
+      font-size: 10pt;
+      color: #333;
+      margin-bottom: 4px;
+    }
+    .role {
+      margin-bottom: 10px;
+    }
+    .role-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    .role-title {
+      font-weight: 700;
+      font-size: 10pt;
+    }
+    .role-employer {
+      font-size: 9.5pt;
+      color: #444;
+    }
+    .role-dates {
+      font-size: 9pt;
+      color: #666;
+      white-space: nowrap;
+    }
+    .role-description {
+      font-size: 9.5pt;
+      color: #444;
+      margin-top: 3px;
+      margin-bottom: 2px;
+    }
+    ul {
+      margin: 4px 0 0 14px;
+    }
+    li {
+      margin-bottom: 2px;
+      font-size: 9.5pt;
+    }
+    .skills-list {
+      font-size: 9.5pt;
+      color: #333;
+    }
+    .education-line {
+      font-size: 9.5pt;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>{{ meta.name }}</h1>
+  <div class="contact-line">
+    {{ meta.location }} &nbsp;|&nbsp; {{ meta.remote_pref }} &nbsp;|&nbsp; {{ meta.target_title }}
+  </div>
+
+  {% if resume.summary %}
+  <div class="section-title">Summary</div>
+  <div class="summary">{{ resume.summary }}</div>
+  {% endif %}
+
+  <div class="section-title">Experience</div>
+  {% for role in resume.experience %}
+  <div class="role">
+    <div class="role-header">
+      <div>
+        <span class="role-title">{{ role.title }}</span>
+        &nbsp;·&nbsp;
+        <span class="role-employer">{{ role.employer }}</span>
+      </div>
+      <div class="role-dates">{{ role.dates }}</div>
+    </div>
+    {% if role.description %}
+    <div class="role-description">{{ role.description }}</div>
+    {% endif %}
+    <ul>
+      {% for bullet in role.bullets %}
+      <li>{{ bullet }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endfor %}
+
+  {% if resume.skills %}
+  <div class="section-title">Skills</div>
+  <div class="skills-list">{{ resume.skills | join(' · ') }}</div>
+  {% endif %}
+
+  {% if resume.education %}
+  <div class="section-title">Education</div>
+  <div class="education-line">
+    {{ resume.education.degree }} in {{ resume.education.field }},
+    {{ resume.education.institution }}
+  </div>
+  {% endif %}
+
+</body>
+</html>

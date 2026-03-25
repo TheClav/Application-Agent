@@ -1,0 +1,24 @@
+# Environment — never commit secrets
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+
+# Generated outputs & run logs
+outputs/
+logs/
+
+# macOS
+.DS_Store
+
+# IDE / tooling
+.claude/
+.vscode/
+.idea/
